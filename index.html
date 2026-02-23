@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>General Lesson Walkthrough Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg: #F4F6F8;
+            --color-primary: #0A2240; /* AWPS Navy Blue */
+            --color-accent: #C8102E; /* Athena Red */
+            --color-gold: #D4AF37; /* AWPS Gold */
+            --color-text: #333333;
+            --color-card: #FFFFFF;
+        }
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+        }
+        h1, h2, h3, .serif-font {
+            font-family: 'Merriweather', serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px; /* Max width constraint */
+            height: 250px;
+            max-height: 300px;
+            margin: 0 auto;
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Custom scrollbar */
+        .checklist-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .checklist-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .checklist-scroll::-webkit-scrollbar-thumb {
+            background: var(--color-primary);
+            border-radius: 3px;
+        }
+        
+        /* Print Styles */
+        @media print {
+            body { background-color: white; }
+            .print-hidden { display: none !important; }
+            .print-block { display: block !important; }
+            .print-border { border: 1px solid #ccc; padding: 8px; border-radius: 4px; }
+            .shadow-lg, .shadow-sm, .shadow { box-shadow: none !important; }
+            textarea { height: auto !important; overflow: hidden !important; resize: none !important; border: none !important; border-bottom: 1px solid #ccc !important; }
+            .chart-container { display: none !important; } /* Hide chart on print to save space, focus on data */
+        }
+    </style>
+    <!-- Chosen Palette: Professional Academic (Navy Blue #0A2240, Crimson Red #C8102E, Muted Gold #D4AF37, Light Gray #F4F6F8) matching the AWPS and Athena Education logos. -->
+    
+    <!-- Application Structure Plan:
+        1. Header: Displays the AWPS and Athena logos to establish official branding, alongside the Print Action.
+        2. Metadata Section: Inputs for Date, Class/Section, Teacher, and Observer to capture the context of the walkthrough.
+        3. Main Dashboard Layout (Grid):
+           - Left Col: The Interactive Walkthrough Checklist (derived directly from the 5 template points).
+           - Right Col: 
+             - Visual Progress: A Doughnut chart tracking the completion of the checklist items.
+             - Qualitative Feedback: Textareas for "Areas of Strength" and "Areas for Improvement" as required by the source document.
+        Why: This structure balances the binary nature of a checklist with the nuanced needs of qualitative observation, while keeping administrative tracking visual and engaging.
+    -->
+
+    <!-- Visualization & Content Choices:
+        - Readiness/Completion (Doughnut Chart): Goal -> Inform. Viz -> Chart.js Doughnut. Interaction -> Updates automatically as items are toggled. Justification -> Gives immediate visual feedback on standard compliance.
+        - Walkthrough Criteria (HTML/JS List): Goal -> Organize/Assess. Viz -> Interactive Checklist. Interaction -> Click to toggle. Justification -> Translates the static Word document into an actionable, trackable digital form.
+        - Qualitative Notes (Textareas): Goal -> Record insights. Viz -> HTML Textareas. Interaction -> Typing. Justification -> Necessary for the "Areas of Strength/Improvement" fields in the original form.
+    -->
+    
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. Unicode used for icons. -->
+</head>
+<body class="p-4 md:p-8 min-h-screen flex flex-col items-center">
+
+    <!-- Main Container -->
+    <div class="max-w-6xl w-full mx-auto space-y-6">
+        
+        <!-- Action Bar (Print) -->
+        <div class="w-full flex justify-end print-hidden">
+            <button onclick="window.print()" class="bg-[#0A2240] hover:bg-[#061528] text-white font-bold py-2 px-4 rounded shadow inline-flex items-center gap-2 transition-colors">
+                <span class="text-xl">🖨️</span>
+                Print Walkthrough
+            </button>
+        </div>
+
+        <!-- Official Header with Logos -->
+        <header class="flex flex-col md:flex-row justify-between items-center border-b-4 border-[#0A2240] pb-6 gap-6">
+            <div class="w-48 md:w-64">
+                <!-- AWPS Logo -->
+                <img src="AWPS.png" alt="AWPS Logo" class="w-full h-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div style="display:none;" class="text-sm font-bold text-[#D4AF37]">AL WAHDA PRIVATE SCHOOL</div>
+            </div>
+            
+            <div class="text-center flex-1">
+                <h1 class="text-3xl md:text-4xl text-[#0A2240] font-bold uppercase tracking-wider">Lesson Walkthrough</h1>
+                <p class="text-sm text-gray-500 mt-1 uppercase font-semibold">Official Observation Record</p>
+            </div>
+
+            <div class="w-32 md:w-48 flex justify-end">
+                <!-- Athena Logo -->
+                <img src="Athena.png" alt="Athena Education Logo" class="w-full h-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div style="display:none;" class="text-sm font-bold text-[#C8102E]">ATHENA EDUCATION</div>
+            </div>
+        </header>
+
+        <!-- Metadata Section (Class info, Date, etc) -->
+        <section class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div>
+                    <label class="block text-xs font-bold text-[#0A2240] uppercase mb-1">Date</label>
+                    <input type="date" class="w-full border-b-2 border-gray-200 focus:border-[#C8102E] outline-none py-1 text-gray-700 bg-transparent transition-colors print-border">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#0A2240] uppercase mb-1">Class / Section</label>
+                    <input type="text" placeholder="e.g. Grade 4A" class="w-full border-b-2 border-gray-200 focus:border-[#C8102E] outline-none py-1 text-gray-700 bg-transparent transition-colors print-border">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#0A2240] uppercase mb-1">Teacher</label>
+                    <input type="text" placeholder="Teacher Name" class="w-full border-b-2 border-gray-200 focus:border-[#C8102E] outline-none py-1 text-gray-700 bg-transparent transition-colors print-border">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#0A2240] uppercase mb-1">Observer</label>
+                    <input type="text" placeholder="Observer Name" class="w-full border-b-2 border-gray-200 focus:border-[#C8102E] outline-none py-1 text-gray-700 bg-transparent transition-colors print-border">
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Dashboard Area -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Column: Interactive Checklist -->
+            <div class="lg:col-span-7 space-y-6">
+                <div class="bg-white rounded-xl shadow p-6 h-full border-t-4 border-[#0A2240]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-[#0A2240] flex items-center gap-2 serif-font">
+                            <span>☑️</span> Walkthrough Criteria
+                        </h3>
+                        <button onclick="resetChecklist()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold py-1 px-3 rounded transition-colors print-hidden">
+                            Reset Filters
+                        </button>
+                    </div>
+                    
+                    <p class="text-sm text-gray-500 mb-6 print-hidden">Click on the criteria below to mark them as met during the observation.</p>
+
+                    <div id="checklist-container" class="space-y-3 checklist-scroll print-block">
+                        <!-- Checklist Items Injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Analytics & Qualitative Feedback -->
+            <div class="lg:col-span-5 flex flex-col gap-6">
+                
+                <!-- Chart: Readiness Score -->
+                <div class="bg-white rounded-xl shadow p-6 border-t-4 border-[#D4AF37] print-hidden">
+                    <h3 class="text-md font-bold text-[#0A2240] mb-2 text-center uppercase tracking-wide">Observation Status</h3>
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Qualitative Feedback -->
+                <div class="bg-white rounded-xl shadow p-6 flex-1 border border-gray-200 flex flex-col gap-6">
+                    
+                    <div class="flex-1 flex flex-col">
+                        <label class="text-[#0A2240] font-bold serif-font text-lg mb-2 flex items-center gap-2">
+                            <span>🌟</span> Areas of Strength
+                        </label>
+                        <textarea placeholder="Detail the positive highlights and successful strategies observed..." class="w-full flex-1 min-h-[120px] p-3 border border-gray-200 rounded focus:border-[#0A2240] focus:ring-1 focus:ring-[#0A2240] outline-none text-sm text-gray-700 resize-y bg-gray-50 print-border"></textarea>
+                    </div>
+
+                    <div class="flex-1 flex flex-col">
+                        <label class="text-[#C8102E] font-bold serif-font text-lg mb-2 flex items-center gap-2">
+                            <span>📈</span> Areas for Improvement
+                        </label>
+                        <textarea placeholder="Provide constructive, actionable feedback and areas for growth..." class="w-full flex-1 min-h-[120px] p-3 border border-gray-200 rounded focus:border-[#C8102E] focus:ring-1 focus:ring-[#C8102E] outline-none text-sm text-gray-700 resize-y bg-gray-50 print-border"></textarea>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Footer Signatures -->
+        <footer class="mt-8 pt-8 w-full border-t border-gray-300">
+            <div class="max-w-4xl mx-auto flex flex-col md:flex-row justify-between gap-12 print-block">
+                <div class="w-full text-center">
+                    <div class="border-b-2 border-gray-800 h-10 mb-2"></div>
+                    <label class="block text-sm font-bold text-gray-700 uppercase">Observer Signature</label>
+                </div>
+                <div class="w-full text-center">
+                    <div class="border-b-2 border-gray-800 h-10 mb-2"></div>
+                    <label class="block text-sm font-bold text-gray-700 uppercase">Teacher Signature</label>
+                </div>
+            </div>
+            <p class="text-xs text-center text-gray-400 mt-6 print-hidden">
+                *Signatures confirm that the walkthrough took place and feedback was shared.*
+            </p>
+        </footer>
+
+    </div>
+
+    <!-- JavaScript Implementation -->
+    <script>
+        // Data Structure based exactly on the provided Word document template
+        const checklistData = [
+            {
+                id: 1,
+                title: "Clear Lesson Objectives",
+                description: "Objectives are clearly communicated and visible to students.",
+                checked: false,
+                icon: "🎯"
+            },
+            {
+                id: 2,
+                title: "Students are engaged and on task",
+                description: "Active participation and focus observed across the classroom.",
+                checked: false,
+                icon: "💡"
+            },
+            {
+                id: 3,
+                title: "Teacher Talk time within expected range",
+                description: "Appropriate balance between instruction and student activity.",
+                checked: false,
+                icon: "⏱️"
+            },
+            {
+                id: 4,
+                title: "Teaching protocols are being met",
+                description: "Adherence to school-wide instructional strategies and expectations.",
+                checked: false,
+                icon: "📋"
+            },
+            {
+                id: 5,
+                title: "Attendance percentage is satisfactory",
+                description: "Classroom attendance meets the required benchmarks.",
+                checked: false,
+                icon: "📊"
+            }
+        ];
+
+        let statusChart;
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            renderChecklist();
+            initChart();
+        });
+
+        // Render Checklist Function
+        function renderChecklist() {
+            const container = document.getElementById('checklist-container');
+            container.innerHTML = '';
+
+            checklistData.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                // Updated styling for a cleaner, non-Ramadan specific look
+                itemDiv.className = `flex items-center p-3 rounded-lg cursor-pointer transition-all duration-200 border-l-4 ${item.checked ? 'bg-[#f0f9ff] border-[#0A2240] border-[1px] border-l-4 shadow-sm' : 'bg-white border-gray-200 border-[1px] hover:bg-gray-50'}`;
+                itemDiv.onclick = () => toggleItem(index);
+
+                itemDiv.innerHTML = `
+                    <div class="flex-shrink-0 mr-4">
+                        <div class="w-6 h-6 rounded flex items-center justify-center border-2 transition-colors ${item.checked ? 'bg-[#0A2240] border-[#0A2240]' : 'border-gray-300 bg-white'}">
+                            ${item.checked ? '<span class="text-white text-sm font-bold">✓</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-gray-800 text-sm md:text-base ${item.checked ? 'text-opacity-80' : ''}">
+                            <span class="mr-1">${item.icon}</span> ${item.title}
+                        </h4>
+                        <p class="text-xs text-gray-500 mt-1 hidden md:block">${item.description}</p>
+                    </div>
+                `;
+                container.appendChild(itemDiv);
+            });
+        }
+
+        // Toggle Logic
+        function toggleItem(index) {
+            checklistData[index].checked = !checklistData[index].checked;
+            renderChecklist();
+            updateChart();
+        }
+
+        // Reset Logic
+        function resetChecklist() {
+            checklistData.forEach(item => item.checked = false);
+            renderChecklist();
+            updateChart();
+        }
+
+        // Chart Initialization
+        function initChart() {
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            
+            statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Criteria Met', 'Pending'],
+                    datasets: [{
+                        data: [0, checklistData.length],
+                        backgroundColor: [
+                            '#0A2240', // Navy Blue
+                            '#E5E7EB'  // Gray
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15,
+                                font: {
+                                    family: "'Lato', sans-serif"
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) { label += ': '; }
+                                    let value = context.raw;
+                                    return label + value + ' items';
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'textCenter',
+                    beforeDraw: function(chart) {
+                        var width = chart.width,
+                            height = chart.height,
+                            ctx = chart.ctx;
+
+                        ctx.restore();
+                        var fontSize = (height / 120).toFixed(2);
+                        ctx.font = "bold " + fontSize + "em 'Lato', sans-serif";
+                        ctx.textBaseline = "middle";
+                        ctx.fillStyle = "#0A2240";
+
+                        var total = checklistData.length;
+                        var met = checklistData.filter(i => i.checked).length;
+                        var text = met + " / " + total;
+                        
+                        var textX = Math.round((width - ctx.measureText(text).width) / 2);
+                        var textY = height / 2.2; // slightly above center to account for legend
+
+                        ctx.fillText(text, textX, textY);
+                        ctx.save();
+                    }
+                }]
+            });
+        }
+
+        // Update Chart Logic
+        function updateChart() {
+            const metCount = checklistData.filter(item => item.checked).length;
+            const pendingCount = checklistData.length - metCount;
+            
+            statusChart.data.datasets[0].data = [metCount, pendingCount];
+            statusChart.update();
+        }
+    </script>
+</body>
+</html>
